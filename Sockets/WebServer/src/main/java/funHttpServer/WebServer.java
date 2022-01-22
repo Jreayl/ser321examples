@@ -17,14 +17,11 @@ write a response back
 package funHttpServer;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Map;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.nio.charset.Charset;
+import org.json.*;
 
 class WebServer {
   public static void main(String args[]) {
@@ -201,21 +198,24 @@ class WebServer {
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
 
-          // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
-
-          // do math
-          Integer result = num1 * num2;
-
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
-
-          // TODO: Include error handling here with a correct error code and
-          // a response that makes sense
+          try {
+            // Extract values from parameters
+            Integer num1 = Integer.parseInt(query_pairs.get("num1"));
+            Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+            BigInteger result = BigInteger.valueOf((long) num1 * num2);
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Result is: " + result);
+          } catch (NumberFormatException e) {
+            e.printStackTrace();
+            builder.append("HTTP/1.1 400 Bad Request \n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<h3> Invalid parameters or syntax </h3>");
+            builder.append("<h3> Example: GET  /multiply?num1=1&num2=2> </h3>");
+          }
 
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
@@ -229,17 +229,90 @@ class WebServer {
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           query_pairs = splitQuery(request.replace("github?", ""));
           String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
 
-          builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response
-          // and list the owner name, owner id and name of the public repo on your webpage, e.g.
-          // amehlhase, 46384989 -> memoranda
-          // amehlhase, 46384989 -> ser316examples
-          // amehlhase, 46384989 -> test316
+          try {
+            // Parse json string into array using org.json
+            JSONArray array = new JSONArray(json);
 
-        } else {
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<h3> Repos: </h3>");
+            builder.append("\n\n");
+
+            for (int i = 0; i < array.length(); i++) {
+              // Get specific repo information
+              String fullName = array.getJSONObject(i).get("full_name").toString();
+              Integer repoID = (Integer) array.getJSONObject(i).get("id");
+              String ownerLogin = array.getJSONObject(i).getJSONObject("owner").get("login").toString();
+
+              // Add to response
+              builder.append("Name: ").append(fullName).append("<br>");
+              builder.append("RepoID: ").append(repoID).append("<br>");
+              builder.append("Owner login: ").append(ownerLogin).append("<br>");
+              builder.append("<br>");
+            }
+
+          } catch (JSONException e) {
+            // Generate response
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<h3> Error parsing request <h3>");
+            e.printStackTrace();
+          }
+
+        } else if (request.contains("video?")) {
+
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          query_pairs = splitQuery(request.replace("video?", ""));
+
+          try {
+            Integer width = Integer.parseInt(query_pairs.get("width"));
+            Integer height = Integer.parseInt(query_pairs.get("height"));
+
+            if (width > 10000) width = 10000;
+            else if (width < 0) width = 0;
+            if (height > 10000) height = 10000;
+            else if (height < 0) height = 0;
+
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            String iframe = String.format("" +
+                    "<iframe " +
+                    "width=%d height=%d " +
+                    "src=\"https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&mute=1&autoplay=1\" " +
+                    "title=\"YouTube video player\" " +
+                    "frameborder=\"0\">" +
+                    "</iframe>",
+                    width, height
+            );
+            builder.append(iframe);
+
+          } catch (NumberFormatException e) {
+            builder.append("HTTP/1.1 400 Bad Request \n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<h3> Invalid parameters or syntax </h3>");
+          }
+
+        } else if (request.contains("button?")) {
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          query_pairs = splitQuery(request.replace("button?", ""));
+
+          String color = query_pairs.get("color");
+          String text = query_pairs.get("text");
+
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+          String button = String.format("<button type=\"button\" style=\"background-color: %s\"> %s </button>", color, text);
+          builder.append(button);
+        }
+        else {
           // if the request is not recognized at all
 
           builder.append("HTTP/1.1 400 Bad Request\n");
