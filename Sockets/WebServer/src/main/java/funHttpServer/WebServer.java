@@ -213,7 +213,7 @@ class WebServer {
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<h3> Invalid parameters or syntax </h3>");
+            builder.append("<p> Hmm.. looks like you have some bad parameters </p> ");
           }
 
         } else if (request.contains("github?")) {
@@ -296,7 +296,7 @@ class WebServer {
               builder.append("HTTP/1.1 400 Bad Request \n");
               builder.append("Content-Type: text/html; charset=utf-8\n");
               builder.append("\n");
-              builder.append("<p> Hmm.. looks like you won't be able to view this video with those dimensions :( </p>");
+              builder.append("<p> Hmm.. looks like you won't be able to view this video with those dimensions &#128546 </p>");
             }
 
           } catch (StringIndexOutOfBoundsException e) {
@@ -308,7 +308,7 @@ class WebServer {
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<p> Hmm.. please enter some integers </p>");
+            builder.append("<p> Hmm.. please enter integers for width and height </p>");
           }
 
         } else if (request.contains("button?")) {
