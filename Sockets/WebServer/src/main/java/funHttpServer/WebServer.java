@@ -258,7 +258,7 @@ class WebServer {
             builder.append("HTTP/1.1 400 Bad Request\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<h3> Invalid parameters or syntax </h3>");
+            builder.append("<p> Hmm.. looks like you made a bad request </p>");
             e.printStackTrace();
           }
 
@@ -278,25 +278,37 @@ class WebServer {
             else if (height < 0) height = 0;
 
             // Generate response
-            builder.append("HTTP/1.1 200 OK\n");
-            builder.append("Content-Type: text/html; charset=utf-8\n");
-            builder.append("\n");
-            String iframe = String.format("" +
-                    "<iframe " +
-                    "width=%d height=%d " +
-                    "src=\"https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&mute=1&autoplay=1\" " +
-                    "title=\"YouTube video player\" " +
-                    "frameborder=\"0\">" +
-                    "</iframe>",
-                    width, height
-            );
-            builder.append(iframe);
+            if (width > 0 && height > 0) {
+              builder.append("HTTP/1.1 200 OK\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              String iframe = String.format("" +
+                      "<iframe " +
+                      "width=%d height=%d " +
+                      "src=\"https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&mute=1&autoplay=1\" " +
+                      "title=\"YouTube video player\" " +
+                      "frameborder=\"0\">" +
+                      "</iframe>",
+                      width, height
+              );
+              builder.append(iframe);
+            } else {
+              builder.append("HTTP/1.1 400 Bad Request \n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("<p> Hmm.. looks like you won't be able to view this video with those dimensions :( </p>");
+            }
 
-          } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+          } catch (StringIndexOutOfBoundsException e) {
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<h3> Invalid parameters or syntax </h3>");
+            builder.append("<p> Hmm.. looks like you have some bad parameters </p>");
+          } catch (NumberFormatException e) {
+            builder.append("HTTP/1.1 400 Bad Request \n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<p> Hmm.. please enter some integers </p>");
           }
 
         } else if (request.contains("button?")) {
@@ -309,6 +321,8 @@ class WebServer {
             String color = query_pairs.get("color");
             String text = query_pairs.get("text");
 
+            if (color.equals("")) color = "black";
+
             builder.append("HTTP/1.1 200 OK\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
@@ -319,7 +333,7 @@ class WebServer {
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<h3> Invalid parameters or syntax </h3>");
+            builder.append("<p> Hmm.. looks like you have some bad parameters </p>");
           }
 
         }
