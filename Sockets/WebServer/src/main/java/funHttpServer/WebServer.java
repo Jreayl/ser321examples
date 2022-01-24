@@ -194,12 +194,12 @@ class WebServer {
           // This multiplies two numbers, there is NO error handling, so when
           // wrong data is given this just crashes
 
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          // extract path parameters
-          query_pairs = splitQuery(request.replace("multiply?", ""));
-
           try {
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            // extract path parameters
+            query_pairs = splitQuery(request.replace("multiply?", ""));
             // Extract values from parameters
+
             Integer num1 = Integer.parseInt(query_pairs.get("num1"));
             Integer num2 = Integer.parseInt(query_pairs.get("num2"));
             BigInteger result = BigInteger.valueOf((long) num1 * num2);
@@ -208,13 +208,12 @@ class WebServer {
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
             builder.append("Result is: " + result);
-          } catch (NumberFormatException e) {
+          } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
             e.printStackTrace();
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
             builder.append("<h3> Invalid parameters or syntax </h3>");
-            builder.append("<h3> Example: GET  /multiply?num1=1&num2=2> </h3>");
           }
 
         } else if (request.contains("github?")) {
@@ -226,11 +225,11 @@ class WebServer {
           // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
           //     "/repos/OWNERNAME/REPONAME/contributors"
 
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-
           try {
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("github?", ""));
+            String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
+
             // Parse json string into array using org.json
             JSONArray array = new JSONArray(json);
 
@@ -254,21 +253,22 @@ class WebServer {
               builder.append("<br>");
             }
 
-          } catch (JSONException e) {
+          } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Generate response
             builder.append("HTTP/1.1 400 Bad Request\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            builder.append("<h3> Error parsing request <h3>");
+            builder.append("<h3> Invalid parameters or syntax </h3>");
             e.printStackTrace();
           }
 
         } else if (request.contains("video?")) {
 
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("video?", ""));
-
           try {
+
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("video?", ""));
+
             Integer width = Integer.parseInt(query_pairs.get("width"));
             Integer height = Integer.parseInt(query_pairs.get("height"));
 
@@ -292,7 +292,7 @@ class WebServer {
             );
             builder.append(iframe);
 
-          } catch (NumberFormatException e) {
+          } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
             builder.append("HTTP/1.1 400 Bad Request \n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
@@ -300,17 +300,28 @@ class WebServer {
           }
 
         } else if (request.contains("button?")) {
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("button?", ""));
 
-          String color = query_pairs.get("color");
-          String text = query_pairs.get("text");
+          try {
 
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          String button = String.format("<button type=\"button\" style=\"background-color: %s\"> %s </button>", color, text);
-          builder.append(button);
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("button?", ""));
+
+            String color = query_pairs.get("color");
+            String text = query_pairs.get("text");
+
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            String button = String.format("<button type=\"button\" style=\"background-color: %s\"> %s </button>", color, text);
+            builder.append(button);
+
+          } catch (StringIndexOutOfBoundsException e) {
+            builder.append("HTTP/1.1 400 Bad Request \n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("<h3> Invalid parameters or syntax </h3>");
+          }
+
         }
         else {
           // if the request is not recognized at all
